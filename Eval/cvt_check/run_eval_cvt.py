@@ -1,5 +1,6 @@
 import argparse
 import csv
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -9,12 +10,18 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from HemoPIC.io.paths import list_fit_patient_ids, resolve_fit_dir as locate_fit_dir, hemopic_seg4_label_path, pick_hemopic_map, training_subject_id
+
 '''
 DATASET_ROOT=/path/to/ISLES2017_Training
 FIT_ROOT=/path/to/HemoPIC_outputs
 OUT_DIR=/path/to/HemoPIC_eval
 
-python3 "path/to/run_eval_cvt.py" "$DATASET_ROOT" "$FIT_ROOT" "$OUT_DIR"
+python Eval/cvt_check/run_eval_cvt.py "$DATASET_ROOT" "$FIT_ROOT" "$OUT_DIR"
 '''
 
 
@@ -71,58 +78,8 @@ def pick_first(paths):
 
 
 # ======================== Fit output discovery helpers ======================== #
-def list_patient_ids(fit_root):
-    out = []
-    for d in sorted(Path(fit_root).glob("p*")):
-        if not d.is_dir():
-            continue
-        name = str(d.name)
-        if not name.startswith("p"):
-            continue
-        digits = []
-        for ch in name[1:]:
-            if ch.isdigit():
-                digits.append(ch)
-            else:
-                break
-        if int(len(digits)) < 1:
-            continue
-        out.append(int("".join(digits)))
-    return sorted(list(set(out)))
-
-def resolve_fit_dir(fit_root, pid):
-    ''' Resolve fit dir and support new and old layout '''
-    pid_str = "p" + str(int(pid))
-    cand = [
-        Path(fit_root) / pid_str / "global" / "core",
-        Path(fit_root) / pid_str / "global",
-        Path(fit_root) / (pid_str + "_kmeans") / "global" / "core",
-        Path(fit_root) / (pid_str + "_kmeans") / "global",
-    ]
-    for d in cand:
-        if d.exists():
-            return d
-    return None
-
 def pick_model_map(fit_dir, tag):
-    tag_u = str(tag).upper()
-    cand = [
-        Path(fit_dir) / ("Model_" + tag_u + "_raw_clamped.nii.gz"),
-        Path(fit_dir) / ("Model_" + tag_u + "_raw.nii.gz"),
-        Path(fit_dir) / ("Model_" + tag_u + "_scaled.nii.gz"),
-        Path(fit_dir) / ("Model_" + tag_u + "_raw_clamped.nii"),
-        Path(fit_dir) / ("Model_" + tag_u + "_raw.nii"),
-        Path(fit_dir) / ("Model_" + tag_u + "_scaled.nii"),
-    ]
-    p = pick_first(cand)
-    if p is not None:
-        return p
-
-    found = sorted(list(Path(fit_dir).glob("*" + tag_u + "*.nii*")))
-    found = [q for q in found if q.is_file()]
-    if int(len(found)) < 1:
-        return None
-    return found[0]
+    return pick_hemopic_map(fit_dir, tag)
 
 
 # ======================== Segmentation and mask utilities ======================== #
@@ -282,18 +239,18 @@ def main():
     ensure_dir(fig_dir)
     ensure_dir(tab_dir)
 
-    patient_ids = list_patient_ids(fit_root)
+    patient_ids = list_fit_patient_ids(fit_root)
 
     rows = []
 
     for pid in patient_ids:
-        patient_folder = dataset_root / ("training_" + str(int(pid)))
-        fit_dir = resolve_fit_dir(fit_root, int(pid))
+        patient_folder = dataset_root / training_subject_id(int(pid))
+        fit_dir = locate_fit_dir(fit_root, int(pid))
 
         if (not patient_folder.exists()) or fit_dir is None:
             continue
 
-        seg_path = patient_folder / "synthseg" / "seg_export_fixed" / "seg4_label_ref24.nii.gz"
+        seg_path = hemopic_seg4_label_path(patient_folder)
         ot_path = find_nii(patient_folder, "OT")
 
         if (not seg_path.exists()) or ot_path is None:

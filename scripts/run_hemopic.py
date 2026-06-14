@@ -12,7 +12,7 @@ K_GM=8
 K_WM=6
 SEED=0
 
-python3 scripts/run_hemopic.py "$DATASET_ROOT" "$OUT_ROOT" "$PATIENT_NUM" "$K_GM" "$K_WM" "$SEED"
+python scripts/run_hemopic.py "$DATASET_ROOT" "$OUT_ROOT" "$PATIENT_NUM" "$K_GM" "$K_WM" "$SEED"
 '''
 
 ### Entry point for fitting one patient

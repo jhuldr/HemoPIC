@@ -31,6 +31,7 @@ from HemoPIC.core.filling import fill_map_nearest_3d
 from HemoPIC.core.roi_fit import fit_roi_curve
 from HemoPIC.models.models_tracer import tracer_update
 from HemoPIC.config import FitConfig
+from HemoPIC.io.paths import training_subject_id, hemopic_seg4_label_path, hemopic_map_path
 
 
 ### Run core fitting and save core outputs only
@@ -43,7 +44,7 @@ def run_core(dataset_root: Path, out_root: Path, patient_num, k_gm, k_wm, seed, 
     dataset_root = Path(dataset_root)
     out_root = Path(out_root)
 
-    patient_id = "training_" + str(int(patient_num))
+    patient_id = training_subject_id(patient_num)
     base = dataset_root / patient_id
     if not base.exists():
         raise FileNotFoundError("Missing patient folder " + str(base))
@@ -55,7 +56,7 @@ def run_core(dataset_root: Path, out_root: Path, patient_num, k_gm, k_wm, seed, 
     if cbf_path is None or cbv_path is None or mtt_path is None or ctc_path is None:
         raise FileNotFoundError("Missing one of MR_rCBF MR_rCBV MR_MTT CTC_from_MR_4DPWI")
 
-    seg_path = base / "synthseg" / "seg_export_fixed" / "seg4_label_ref24.nii.gz"
+    seg_path = hemopic_seg4_label_path(base)
     if not seg_path.exists():
         raise FileNotFoundError("Missing seg4 file " + str(seg_path))
 
@@ -80,14 +81,9 @@ def run_core(dataset_root: Path, out_root: Path, patient_num, k_gm, k_wm, seed, 
     dt = safe_dt_from_header(ctc_img)
     t = np.arange(t_len, dtype=np.float64) * float(dt)
 
-    patient_out = out_root / ("p" + str(int(patient_num)))
+    patient_out = out_root / patient_id
     ensure_clean_dir(patient_out)
-
-    global_dir = patient_out / "global"
-    global_dir.mkdir(parents=True, exist_ok=True)
-
-    core_dir = global_dir / "core"
-    core_dir.mkdir(parents=True, exist_ok=True)
+    fit_dir = patient_out
 
     inside = seg4 > 0
     ctc_finite3 = np.all(np.isfinite(ctc), axis=3)
@@ -190,14 +186,14 @@ def run_core(dataset_root: Path, out_root: Path, patient_num, k_gm, k_wm, seed, 
     sub3 = fill_zero_labels_by_nearest(sub3, fill_mask3=show_mask3)
     unlabeled = int(np.sum(show_mask3 & (sub3 == 0)))
 
-    roi_labels_path = core_dir / "roi_labels_seg4_within_kmeans.nii.gz"
+    roi_labels_path = fit_dir / "roi_labels_seg4_within_kmeans.nii.gz"
     save_nifti_like(cbf_img, sub3.astype(np.int32), roi_labels_path, dtype=np.int32)
 
     priors = {}
     fits = {}
     roi_curve_items = []
 
-    fit_csv = core_dir / "roi_fit_summary.csv"
+    fit_csv = fit_dir / "roi_fit_summary.csv"
     with open(fit_csv, "w", newline="", encoding="utf8") as fcsv:
         wcsv = csv.writer(fcsv)
         wcsv.writerow(
@@ -429,13 +425,13 @@ def run_core(dataset_root: Path, out_root: Path, patient_num, k_gm, k_wm, seed, 
     md_mtt = np.where(show_mask3, np.maximum(md_mtt, mtt_floor), np.nan)
     md_mtt = np.where(show_mask3, np.minimum(md_mtt, mtt_cap), np.nan)
 
-    model_cbf_path = core_dir / "Model_CBF_raw.nii.gz"
-    model_cbv_path = core_dir / "Model_CBV_raw.nii.gz"
-    model_mtt_path = core_dir / "Model_MTT_raw_clamped.nii.gz"
+    hemopic_cbf_path = hemopic_map_path(fit_dir, "CBF")
+    hemopic_cbv_path = hemopic_map_path(fit_dir, "CBV")
+    hemopic_mtt_path = hemopic_map_path(fit_dir, "MTT")
 
-    save_nifti_like(cbf_img, md_cbf, model_cbf_path, dtype=np.float32)
-    save_nifti_like(cbf_img, md_cbv, model_cbv_path, dtype=np.float32)
-    save_nifti_like(cbf_img, md_mtt, model_mtt_path, dtype=np.float32)
+    save_nifti_like(cbf_img, md_cbf, hemopic_cbf_path, dtype=np.float32)
+    save_nifti_like(cbf_img, md_cbv, hemopic_cbv_path, dtype=np.float32)
+    save_nifti_like(cbf_img, md_mtt, hemopic_mtt_path, dtype=np.float32)
 
     core_info = {
         "patient": int(patient_num),
@@ -451,13 +447,12 @@ def run_core(dataset_root: Path, out_root: Path, patient_num, k_gm, k_wm, seed, 
         "mtt_floor_from_gt_p1": float(mtt_floor),
         "mtt_cap_from_gt_p99_5": float(mtt_cap),
     }
-    with open(core_dir / "run_info_core.json", "w", encoding="utf8") as f:
+    with open(fit_dir / "run_info_core.json", "w", encoding="utf8") as f:
         json.dump(core_info, f, indent=2)
 
     return {
         "patient_out": patient_out,
-        "global_dir": global_dir,
-        "core_dir": core_dir,
+        "fit_dir": fit_dir,
         "t": t,
         "dt": float(dt),
         "cart_norm": cart_norm,
@@ -477,8 +472,8 @@ def run_core(dataset_root: Path, out_root: Path, patient_num, k_gm, k_wm, seed, 
         "paths": {
             "roi_labels": roi_labels_path,
             "fit_csv": fit_csv,
-            "model_cbf": model_cbf_path,
-            "model_cbv": model_cbv_path,
-            "model_mtt": model_mtt_path,
+            "hemopic_cbf": hemopic_cbf_path,
+            "hemopic_cbv": hemopic_cbv_path,
+            "hemopic_mtt": hemopic_mtt_path,
         },
     }

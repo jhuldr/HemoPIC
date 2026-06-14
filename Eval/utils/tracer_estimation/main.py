@@ -22,6 +22,7 @@ from .io_utils import (
 from .plots import plot_combo
 
 from HemoPIC.io.io_nifti import find_nii, load_nifti, squeeze_ctc, safe_dt_from_header
+from HemoPIC.io.paths import list_fit_patient_ids, resolve_fit_dir, training_subject_id
 from HemoPIC.core.preprocessing import smooth_curve_gaussian, compute_peak_map, weight_from_aif
 from HemoPIC.models.models_windkessel import windkessel_outflow_from_r_tau
 from HemoPIC.models.models_tracer import tracer_update
@@ -154,18 +155,7 @@ def run_report(dataset_root: Path, fit_root: Path, report_root: Path):
 
     region_names = ["GM", "WM", "lesion", "c_lesion", "full_brain"]
 
-    ### Discover fitted patients
-    patient_dirs = sorted([p for p in fit_root.glob("p*") if p.is_dir()])
-    patient_nums = []
-    for pdir in patient_dirs:
-        name = pdir.name
-        if not name.startswith("p"):
-            continue
-        num_str = name.split("_")[0].replace("p", "")
-        if len(num_str) < 1:
-            continue
-        patient_nums.append(int(num_str))
-    patient_nums = sorted(list(set(patient_nums)))
+    patient_nums = list_fit_patient_ids(fit_root)
 
     per_patient_metrics = []
     per_patient_curves = {k: [] for k in region_names}
@@ -173,21 +163,18 @@ def run_report(dataset_root: Path, fit_root: Path, report_root: Path):
     tend_list = []
 
     for patient_num in patient_nums:
-        pdir = fit_root / ("p" + str(int(patient_num)))
-        if not pdir.exists():
-            pdir = fit_root / ("p" + str(int(patient_num)) + "_kmeans")
-        core_dir = pdir / "global" / "core"
-        if not core_dir.exists():
-            core_dir = pdir / "global"
+        fit_dir = resolve_fit_dir(fit_root, int(patient_num))
+        if fit_dir is None:
+            continue
 
-        csv_path = core_dir / "roi_fit_summary.csv"
-        info_path = core_dir / "run_info_core.json"
-        lab_path = core_dir / "roi_labels_seg4_within_kmeans.nii.gz"
+        csv_path = fit_dir / "roi_fit_summary.csv"
+        info_path = fit_dir / "run_info_core.json"
+        lab_path = fit_dir / "roi_labels_seg4_within_kmeans.nii.gz"
 
         if (not csv_path.exists()) or (not info_path.exists()) or (not lab_path.exists()):
             continue
 
-        base = dataset_root / ("training_" + str(int(patient_num)))
+        base = dataset_root / training_subject_id(int(patient_num))
         ctc_path = find_nii(base, "CTC_from_MR_4DPWI")
         if ctc_path is None:
             continue

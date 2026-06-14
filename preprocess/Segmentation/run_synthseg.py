@@ -16,10 +16,9 @@ export FS_LICENSE=<path to your license.txt>
 
 '''
 Run:
-python3 /path/to/run_synthseg.py \
+python preprocess/Segmentation/run_synthseg.py \
   /path/to/ISLES2017_Training \
-  /path/to/output_synthseg \
-  "" \
+  /path/to/segmentation_root
 '''
 
 ### Right hemisphere label to left hemisphere label mapping
@@ -128,7 +127,7 @@ def merge_right_to_left(seg: np.ndarray) -> np.ndarray:
 def main() -> None:
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 run_synthseg.py <training_root> <out_root> [target_subject] [max_threads]"
+            "Usage: python3 run_synthseg.py <data_root> <segmentation_root> [target_subject] [max_threads]"
         )
 
     # Resolve input paths

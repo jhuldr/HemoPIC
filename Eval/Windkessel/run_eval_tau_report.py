@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import math
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -14,12 +15,18 @@ import matplotlib.pyplot as plt
 
 import nibabel as nib
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from HemoPIC.io.paths import list_fit_patient_ids, resolve_fit_dir, training_subject_id
+
 '''
 DATASET_ROOT=/path/to/ISLES2017_Training
 FIT_ROOT=/path/to/HemoPIC_outputs
 OUT_DIR=/path/to/HemoPIC_eval
 
-python3 "$/path/to/run_eval_tau_report.py" "$DATASET_ROOT" "$FIT_ROOT" "$OUT_DIR"
+python Eval/Windkessel/run_eval_tau_report.py "$DATASET_ROOT" "$FIT_ROOT" "$OUT_DIR"
 '''
 # ============== Global constants: time grid ============== #
 T_MAX = 40.0
@@ -69,46 +76,16 @@ def find_nii(base: Path, stem: str) -> Optional[Path]:
 
 
 def patient_dir(dataset_root: Path, pid: int) -> Path:
-    '''
-    resolve dataset patient folder
-    '''
-    return dataset_root / ("training_" + str(int(pid)))
+    return dataset_root / training_subject_id(int(pid))
 
 
 ### Resolve fit global dir and support new and old layout
 def resolve_fit_global_dir(fit_root: Path, pid: int) -> Optional[Path]:
-    pid_str = "p" + str(int(pid))
-    cand = [
-        fit_root / pid_str / "global" / "core",
-        fit_root / pid_str / "global",
-        fit_root / (pid_str + "_kmeans") / "global" / "core",
-        fit_root / (pid_str + "_kmeans") / "global",
-    ]
-    for d in cand:
-        if d.exists():
-            return d
-    return None
+    return resolve_fit_dir(fit_root, pid)
 
 
-### List patient ids from fit root
 def list_patient_ids(fit_root: Path) -> List[int]:
-    out: List[int] = []
-    for d in sorted(fit_root.glob("p*")):
-        if not d.is_dir():
-            continue
-        name = str(d.name)
-        if not name.startswith("p"):
-            continue
-        digits = []
-        for ch in name[1:]:
-            if ch.isdigit():
-                digits.append(ch)
-            else:
-                break
-        if int(len(digits)) < 1:
-            continue
-        out.append(int("".join(digits)))
-    return sorted(list(set(out)))
+    return list_fit_patient_ids(fit_root)
 
 
 ### Weighted quantile with linear interpolation

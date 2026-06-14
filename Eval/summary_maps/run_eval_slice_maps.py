@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -12,6 +13,12 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import distance_transform_edt
 from scipy.ndimage import median_filter
 from scipy.ndimage import label
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from HemoPIC.io.paths import require_fit_dir, training_subject_id, hemopic_seg4_label_path, require_hemopic_map
 
 '''
 Run:
@@ -53,39 +60,14 @@ def find_nii(base: Path, stem: str):
     return None
 
 
-### Locate the fit output directory that contains model perfusion maps
-### This supports multiple folder layouts from earlier runs
+### Locate the fit output directory for one patient
 def find_fit_dir(fit_root: Path, pid: int) -> Path:
-    pid_str = "p" + str(int(pid))
-    cand = [
-        fit_root / pid_str / "global" / "core",
-        fit_root / pid_str / "global",
-        fit_root / (pid_str + "_kmeans") / "global" / "core",
-        fit_root / (pid_str + "_kmeans") / "global",
-    ]
-    for d in cand:
-        if d.exists():
-            return d
-    raise FileNotFoundError("missing fit dir for pid " + str(int(pid)))
+    return require_fit_dir(fit_root, pid)
 
 
-### Find a model map file inside the fit directory
-def find_model_map(fit_dir: Path, stem: str) -> Path:
-    p1 = fit_dir / (stem + ".nii.gz")
-    if p1.exists():
-        return p1
-    p2 = fit_dir / (stem + ".nii")
-    if p2.exists():
-        return p2
-    raise FileNotFoundError("missing map " + str(stem) + " in " + str(fit_dir))
-
-
-### Find the model MTT file with a fallback name for older runs
-def find_model_mtt(fit_dir: Path) -> Path:
-    try:
-        return find_model_map(fit_dir, "Model_MTT_raw_clamped")
-    except Exception:
-        return find_model_map(fit_dir, "Model_MTT_raw")
+### Find a HemoPIC perfusion map inside the fit directory
+def find_hemopic_map(fit_dir: Path, tag: str) -> Path:
+    return require_hemopic_map(fit_dir, tag)
 
 
 ### Squeeze tracer series to a 4D array shaped as X Y Z T
@@ -356,15 +338,15 @@ def main():
     pid = int(args.patient)
     z = int(args.slice_z)
 
-    train_dir = dataset_root / ("training_" + str(int(pid)))
-    seg_path = train_dir / "synthseg" / "seg_export_fixed" / "seg4_label_ref24.nii.gz"
+    train_dir = dataset_root / training_subject_id(int(pid))
+    seg_path = hemopic_seg4_label_path(train_dir)
     if not seg_path.exists():
         raise FileNotFoundError(str(seg_path))
 
     fit_dir = find_fit_dir(fit_root, pid)
-    cbf_path = find_model_map(fit_dir, "Model_CBF_raw")
-    cbv_path = find_model_map(fit_dir, "Model_CBV_raw")
-    mtt_path = find_model_mtt(fit_dir)
+    cbf_path = find_hemopic_map(fit_dir, "CBF")
+    cbv_path = find_hemopic_map(fit_dir, "CBV")
+    mtt_path = find_hemopic_map(fit_dir, "MTT")
 
     seg3 = load_canonical(seg_path)
     cbf3 = load_canonical(cbf_path)
@@ -489,7 +471,7 @@ def main():
     mtt2d = np.where(show_crop, mtt2d, np.nan)
     lesion2d = np.where(show_crop, lesion2d, np.nan)
 
-    run_dir = out_dir / ("p" + str(int(pid)) + "_z" + str(int(z)).zfill(3))
+    run_dir = out_dir / (training_subject_id(pid) + "_z" + str(int(z)).zfill(3))
     run_dir.mkdir(parents=True, exist_ok=True)
 
     jet0 = plt.get_cmap("jet")(0.0)

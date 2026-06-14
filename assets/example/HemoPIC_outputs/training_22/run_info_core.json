@@ -1,0 +1,14 @@
+{
+  "patient": 22,
+  "dt_seconds": 1.0,
+  "k_gm": 8,
+  "k_wm": 6,
+  "seed": 0,
+  "baseline_frames": 5,
+  "aif_peak_threshold": 6.5123865377098324,
+  "unlabeled_after_fill": 0,
+  "cbf_floor_from_gt_p1": 0.9999972581863403,
+  "cbf_cap_from_gt_p99_5": 159.99966430664062,
+  "mtt_floor_from_gt_p1": 1.2863952542829783e-05,
+  "mtt_cap_from_gt_p99_5": 15.999521446228027
+}

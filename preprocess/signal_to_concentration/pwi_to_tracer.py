@@ -5,10 +5,10 @@ import numpy as np
 import nibabel as nib
 
 """
-Convert ISLES2017 MR_4DPWI signal into a tracer time series.
+Convert ISLES2017 MR_4DPWI signal into CTC_from_MR_4DPWI tracer concentration.
 
 Run:
-python "/path/to/pwi_to_tracer.py" "/path/to/ISLES2017_Training" 1 48
+python preprocess/signal_to_concentration/pwi_to_tracer.py /path/to/ISLES2017_Training 1 48
 """
 
 # Parse a positive float, else fall back to default
@@ -134,7 +134,7 @@ def _write_tracer_for_subject(subject_dir, te_seconds, dt_seconds, s0_threshold,
     if pwi_path is None:
         return
 
-    out_path = subject_dir / "Tracer_from_MR_4DPWI.nii"
+    out_path = subject_dir / "CTC_from_MR_4DPWI.nii"
 
     if out_path.exists() and int(overwrite) == 0:
         if _output_ok(out_path):

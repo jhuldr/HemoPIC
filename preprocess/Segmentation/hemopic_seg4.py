@@ -11,17 +11,20 @@ try:
 except Exception as e:
     raise RuntimeError("Need nibabel.processing.resample_from_to") from e
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from HemoPIC.io.paths import hemopic_seg4_dir, hemopic_seg4_label_path, hemopic_seg4_gray_path
+
 '''
 Run:
-python /path/to/hemopic_seg4.py \
+python preprocess/Segmentation/hemopic_seg4.py \
   /path/to/ISLES2017_Training \
-  /path/to/output_synthseg \
-  /path/to/output_hemopic_seg4
+  /path/to/segmentation_root
 '''
 
-# ==================================================================== #
-
-# Build seg4 from SynthSeg label map, Output labels:
+# Build seg4 from structural segmentation. Output labels:
 # 0 background
 # 1 gray matter
 # 2 white matter
@@ -144,7 +147,6 @@ def process_one(
     subj: str,
     data_root: Path,
     seg_root: Path,
-    out_root: Path,
     prefer_sym: bool,
     skip_if_done: bool,
 ) -> str:
@@ -161,9 +163,9 @@ def process_one(
         print("missing_ref24", subj)
         return "missing"
 
-    out_dir = ensure_dir(out_root / subj / "seg4")
-    out_label = out_dir / "seg4_label_ref24.nii.gz"
-    out_gray = out_dir / "seg4_gray_ref24.nii.gz"
+    out_dir = ensure_dir(hemopic_seg4_dir(data_subj))
+    out_label = hemopic_seg4_label_path(data_subj)
+    out_gray = hemopic_seg4_gray_path(data_subj)
 
     if skip_if_done and file_ok(out_label) and file_ok(out_gray):
         print("skip_done", subj)
@@ -201,25 +203,22 @@ def process_one(
 
 
 def main() -> None:
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 seg30_to_seg4.py <data_root> <seg_root> <out_root> [target_subject] [prefer_sym] [skip_if_done]"
+            "Usage: python3 hemopic_seg4.py <data_root> <seg_root> [target_subject] [prefer_sym] [skip_if_done]"
         )
 
     data_root = Path(sys.argv[1]).expanduser().resolve()
     seg_root = Path(sys.argv[2]).expanduser().resolve()
-    out_root = Path(sys.argv[3]).expanduser().resolve()
 
-    target_subject = sys.argv[4] if len(sys.argv) >= 5 else ""
-    prefer_sym = bool(int(sys.argv[5])) if len(sys.argv) >= 6 else True
-    skip_if_done = bool(int(sys.argv[6])) if len(sys.argv) >= 7 else True
+    target_subject = sys.argv[3] if len(sys.argv) >= 4 else ""
+    prefer_sym = bool(int(sys.argv[4])) if len(sys.argv) >= 5 else True
+    skip_if_done = bool(int(sys.argv[5])) if len(sys.argv) >= 6 else True
 
     if not data_root.exists():
         raise RuntimeError("data_root not found")
     if not seg_root.exists():
         raise RuntimeError("seg_root not found")
-
-    ensure_dir(out_root)
 
     processed = 0
     skipped = 0
@@ -235,7 +234,6 @@ def main() -> None:
             subj=subj,
             data_root=data_root,
             seg_root=seg_root,
-            out_root=out_root,
             prefer_sym=prefer_sym,
             skip_if_done=skip_if_done,
         )
