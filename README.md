@@ -186,6 +186,14 @@ python Eval/tracer_recon/run_eval_tracer_estimation.py "$DATASET_ROOT" "$FIT_ROO
 python Eval/Windkessel/run_eval_tau_report.py "$DATASET_ROOT" "$FIT_ROOT" "$OUT_DIR"
 ```
 
+### Lesion ROC / PR Analysis
+
+Compare HemoPIC and ISLES silver-standard maps for OT lesion discrimination (CBF, CBV, MTT):
+
+```bash
+python Eval/lesion_roc/run_eval_lesion_roc.py "$DATASET_ROOT" "$FIT_ROOT" "$OUT_DIR/lesion_roc" --all
+```
+
 ## Link to Manuscript
 
 - **`Eval/summary_maps/run_eval_summary_stats.py`** — patient cohort summary statistics for lesion and gray/white matter
@@ -193,6 +201,7 @@ python Eval/Windkessel/run_eval_tau_report.py "$DATASET_ROOT" "$FIT_ROOT" "$OUT_
 - **`Eval/tracer_recon/run_eval_tracer_estimation.py`** — tracer reconstruction evaluation reports and plots
 - **`Eval/cvt_check/run_eval_cvt.py`** — central volume theorem consistency summaries and plots
 - **`Eval/Windkessel/run_eval_tau_report.py`** — Windkessel parameter reports
+- **`Eval/lesion_roc/run_eval_lesion_roc.py`** — lesion ROC/PR analysis for CBF, CBV, and MTT
 
 ## Citation
 
