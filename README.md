@@ -1,12 +1,20 @@
-# HemoPIC
+<div align="center">
+  <h1>HemoPIC<br><sub>A Physics-Informed Cerebral Hemodynamics Digital Twin for Brain Perfusion</sub></h1>
+</div>
 
-**Yi-Chen (Matthew) Lee** and **Peirong Liu**
+<p align="center">
+<b align="center">Yi-Chen Lee</b> and <b align="center">Peirong Liu</b>
+</p>
 
-Department of Electrical and Computer Engineering,  
-Data Science and AI Institute,  
+<p align="center">
+Department of Electrical and Computer Engineering,<br/>
+Data Science and AI Institute,<br/>
 Johns Hopkins University
+</p>
 
+<p align="center">
 Contact: {ylee268, pliu53}@jh.edu
+</p>
 
 This repository contains the official implementation of our **MICCAI 2026** paper **HemoPIC: A Physics-Informed Cerebral Hemodynamics Digital Twin for Brain Perfusion**. It includes a complete pipeline and evaluation scripts for cerebral perfusion processing.
 
@@ -14,7 +22,7 @@ This repository contains the official implementation of our **MICCAI 2026** pape
   <img src="./assets/overview.png" alt="HemoPIC overview" width="850"/>
   <br>
   <em>
-  <strong>Overview of HemoPIC.</strong> Given measured tracer dynamics, HemoPIC estimates regional blood inflow and outflow without requiring an arterial input function (AIF). It couples tracer transport with patient-specific hemodynamics in a physics-grounded formulation.
+  <strong>Fig. 1. Overview of HemoPIC.</strong> Given measured tracer dynamics, HemoPIC estimates regional blood inflow and outflow without requiring an arterial input function (AIF). It couples tracer transport with patient-specific hemodynamics in a physics-grounded formulation.
   </em>
 </p>
 
@@ -22,7 +30,7 @@ This repository contains the official implementation of our **MICCAI 2026** pape
   <img src="./assets/visualization.png" alt="HemoPIC results" width="850"/>
   <br>
   <em>
-  <strong>Consistency between HemoPIC and conventional AIF-based perfusion maps.</strong> Deconv denotes the ISLES 2017 silver-standard AIF-based deconvolution maps. All maps are shown using identical scales for each parameter.
+  <strong>Fig. 2. Consistency between HemoPIC and conventional AIF-based perfusion maps.</strong> Deconv denotes the ISLES 2017 silver-standard AIF-based deconvolution maps. All maps are shown using identical scales for each parameter.
   </em>
 </p>
 
