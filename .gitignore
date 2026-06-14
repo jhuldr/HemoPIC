@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+snapshot_repo.py
+repo_snapshot_full.json
+repo_snapshot_full.txt
