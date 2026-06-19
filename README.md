@@ -209,7 +209,7 @@ python Eval/lesion_roc/run_eval_lesion_roc.py "$DATASET_ROOT" "$FIT_ROOT" "$OUT_
 @inproceedings{lee2026hemopic,
   title={{HemoPIC: A Physics-Informed Cerebral Hemodynamics Digital Twin for Brain Perfusion}},
   author={Lee, Yi-Chen and Liu, Peirong},
-  booktitle={Medical Image Computing and Computer Assisted Intervention ({MICCAI})},
+  booktitle={Medical Image Computing and Computer Assisted Intervention (MICCAI)},
   year={2026}
 }
 ```
