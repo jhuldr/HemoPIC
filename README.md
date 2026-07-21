@@ -1,6 +1,10 @@
 <div align="center">
   <h1>HemoPIC<br><sub>A Physics-Informed Cerebral Hemodynamics Digital Twin for Brain Perfusion</sub></h1>
-</div>
+</div> 
+
+<p align="center">
+  <a href="https://arxiv.org/abs/2607.08799">arXiv preprint</a> | MICCAI 2026 (Coming Soon)
+</p>
 
 <p align="center">
 <b align="center">Yi-Chen Lee</b> and <b align="center">Peirong Liu</b>
