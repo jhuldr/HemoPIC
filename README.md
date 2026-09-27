@@ -3,7 +3,7 @@
 </div> 
 
 <p align="center">
-  <a href="https://arxiv.org/abs/2607.08799">arXiv preprint</a> | MICCAI 2026 (Coming Soon)
+  <a href="https://arxiv.org/abs/2607.08799">arXiv preprint</a> | <a href="https://papers.miccai.org/miccai-2026/0453-Paper2058.html">MICCAI 2026</a> (Oral)
 </p>
 
 <p align="center">
